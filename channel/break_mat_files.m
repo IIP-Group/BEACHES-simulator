@@ -3,7 +3,8 @@
 % -- subsets, so that the file sizes are reduced to be uploaded to GitHub.
 % -----------------------------------------------------
 
-par = par_config('a', false);
+fullpath = mfilename('fullpath');
+file_path = strrep(fullpath, mfilename(), '');
 REMOVE_ORIGINAL_FILES = true;
 
 file_names = { 'H_stored_256_16_QuadMMLoS_1_10_110S0',...
@@ -19,17 +20,17 @@ file_names = { 'H_stored_256_16_QuadMMLoS_1_10_110S0',...
 for i = 1:length(file_names)
     load([file_names{i}]);
     Hsub = H(:,:,1:250);
-    save([par.simulator_path '/channel/generated_channels/' file_names{i} '_sub1'], 'Hsub')
+    save([file_path '/generated_channels/' file_names{i} '_sub1'], 'Hsub')
     Hsub = H(:,:,251:500);
-    save([par.simulator_path '/channel/generated_channels/' file_names{i} '_sub2'], 'Hsub')
+    save([file_path '/generated_channels/' file_names{i} '_sub2'], 'Hsub')
     Hsub = H(:,:,501:750);
-    save([par.simulator_path '/channel/generated_channels/' file_names{i} '_sub3'], 'Hsub')
+    save([file_path '/generated_channels/' file_names{i} '_sub3'], 'Hsub')
     Hsub = H(:,:,751:1000);
-    save([par.simulator_path '/channel/generated_channels/' file_names{i} '_sub4'], 'Hsub')
+    save([file_path '/generated_channels/' file_names{i} '_sub4'], 'Hsub')
 end
 
 if REMOVE_ORIGINAL_FILES
     for i = 1:length(file_names)
-        delete(sprintf('%s.mat',[par.simulator_path '/channel/generated_channels/' file_names{i}]))
+        delete(sprintf('%s.mat',[file_path '/generated_channels/' file_names{i}]))
     end
 end
