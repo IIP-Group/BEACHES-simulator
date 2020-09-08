@@ -46,6 +46,6 @@ while (~done)
         
     end
     
-    save(header, 'H');
+    save([par.simulator_path '/channel/generated_channels/' header], 'H');
     
 end
