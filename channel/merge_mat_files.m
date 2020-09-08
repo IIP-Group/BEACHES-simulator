@@ -4,12 +4,13 @@
 % -- GitHub
 % -----------------------------------------------------
 
-par = par_config('a', false);
+fullpath = mfilename('fullpath');
+file_path = strrep(fullpath, mfilename(), '');
 REMOVE_ORIGINAL_SUB_FILES = true;
 
 H = zeros(256,16,1000);
 
-gen_channel_dir = [par.simulator_path 'channel/generated_channels/'];
+gen_channel_dir = [file_path '/generated_channels/'];
 
 
 done = false;
@@ -41,11 +42,11 @@ while (~done)
             load(filename);
             H(:,:,(k-1)*250+1:k*250) = Hsub;
             k = k + 1;
-            delete(sprintf('%s',[par.simulator_path '/channel/generated_channels/' filename]))
+            delete(sprintf('%s',[file_path '/generated_channels/' filename]))
         end
         
     end
     
-    save([par.simulator_path '/channel/generated_channels/' header], 'H');
+    save([file_path '/generated_channels/' header], 'H');
     
 end
