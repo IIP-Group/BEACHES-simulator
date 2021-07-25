@@ -1,23 +1,35 @@
 
 function [x_UE, y_UE] = users_locations(par)
 
-    min_angle_sep = par.MinAngleSep; % minumum angle seperation between users [deg]
-    broadside_BS_deg = 0; % broadside of BS antenna array  [deg]
-    % distance spread  
-    
-    d_min = par.dmin;
-    d_max = par.dmax;
-    d_UE = (d_max - d_min)*rand(par.U,1) + d_min;
-    
-    % ---------------------------------------------------------------------------
-    %--------------------- USERS DISTRIBUTION BEGINS HERE -----------------------
-    % GOAL: Generate par.U uniformly distributed random variables with minimum
-    % distance given by min_angle_sep
-    
-    % Determine the angle of the first user
-    aod_UE = zeros(par.U,1);
-    sector_edge1 = broadside_BS_deg-60;
-    sector_edge2 = broadside_BS_deg+60;
+min_angle_sep = par.MinAngleSep; % minumum angle seperation between users [deg]
+broadside_BS_deg = 0; % broadside of BS antenna array  [deg]
+% distance spread
+if ~isfield(par, 'U0')
+    par.U0 = par.U;
+end
+
+if par.U0 < par.U
+    error('Total number of active users must be larger than the number of served users!');
+end
+
+d_min = par.dmin;
+d_max = par.dmax;
+d_UE = (d_max - d_min)*rand(par.U0,1) + d_min;
+
+% ---------------------------------------------------------------------------
+%--------------------- USERS DISTRIBUTION BEGINS HERE -----------------------
+% GOAL: Generate par.U0 uniformly distributed random variables with minimum
+% distance given by min_angle_sep
+
+% Determine the angle of the first user
+
+sector_edge1 = broadside_BS_deg-60;
+sector_edge2 = broadside_BS_deg+60;
+
+if par.MinAngleSep == 0
+    aod_UE = unifrnd(sector_edge1,sector_edge2, par.U0,1);
+else
+    aod_UE = zeros(par.U0,1);
     p = [sector_edge1,sector_edge2];    % each row of p represents an unoccupied range of angles (now just one row!)
     aod_UE(1) = unifrnd(p(1), p(2));
     e1 = aod_UE(1) - min_angle_sep;
@@ -32,7 +44,7 @@ function [x_UE, y_UE] = users_locations(par)
     
     % ----- Find the uniformly distributed random angle for each user (other than the first one)
     % such that the minimum angle seperation is met.
-    for aod_i  = 2:par.U
+    for aod_i  = 2:par.U0
         % Find a uniformly distributed random angle for the next user
         % within the unoccupied ranges of angles
         unoccupied = zeros(size(p,1),1);
@@ -85,7 +97,7 @@ function [x_UE, y_UE] = users_locations(par)
                 p = [[p(1,1),e1];[e2,p(1,2)];p(2:end,:)];
             elseif e2p == size(p,1)
                 p = [p(1:end-1,:);[p(end,1),e1];[e2,p(end,2)]];
-            else 
+            else
                 p = [p(1:p_row-1,:);[p(p_row,1),e1];[e2,p(p_row,2)];p(p_row+1:end,:)];
             end
         elseif e1p < 0 && e2p < 0
@@ -93,7 +105,7 @@ function [x_UE, y_UE] = users_locations(par)
                 p = p(2:end,:);
             elseif e1p == -size(p,1)
                 p = p(1:end-1,:);
-            else 
+            else
                 p = [p(1:p_row-1,:);p(p_row+1:end,:)];
             end
         elseif e1p < 0 && e2p > 0
@@ -102,15 +114,19 @@ function [x_UE, y_UE] = users_locations(par)
             p(p_row,2) = e1;
         end
     end
-    %---------------------- USERS DISTRIBUTION ENDS HERE ------------------------
-    % ---------------------------------------------------------------------------
     
-    
+end
+%---------------------- USERS DISTRIBUTION ENDS HERE ------------------------
+% ---------------------------------------------------------------------------
 
-    coord_BS = [0, 0]; % BS coord.
-    coord_UE = ones(par.U,1)*coord_BS + (d_UE*ones(1,2)).*[cosd(aod_UE), sind(aod_UE)]; % UE coord.
+if (length(aod_UE) > 1) && any(abs(diff(sort(aod_UE, 'ascend'))) < 0.99*min_angle_sep)
+    error('Error in user locations: min angle separation not satisfied!');
+end
 
-    x_UE = coord_UE(:,1);
-    y_UE = coord_UE(:,2);
-    
+coord_BS = [0, 0]; % BS coord.
+coord_UE = ones(par.U0,1)*coord_BS + (d_UE*ones(1,2)).*[cosd(aod_UE), sind(aod_UE)]; % UE coord.
+
+x_UE = coord_UE(:,1);
+y_UE = coord_UE(:,2);
+
 end
